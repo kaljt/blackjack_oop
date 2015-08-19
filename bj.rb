@@ -77,9 +77,84 @@ class BlackJackDeck
   def shuffle_deck
     @blackjack_deck.shuffle!
   end
+
+  def deal_card(recipient)
+    @recipient = recipient
+    @recipient.hand << @blackjack_deck.data.pop
+   
+  end
+
 end
 
+class Dealer
+  attr_accessor :hand
+  attr_reader :name
+
+  def initialize
+    @name = "Dealer"
+    @hand = []
+    @hand_total = 0
+  end
+
+  def show_hand
+    puts "Dealer's hand =>"
+    @hand.each do |card|
+      puts "=> #{card.face[1]} of #{card.face[0]}"
+    end
+  end
+  def pre_flop_total
+    puts "Dealer Total: " + @hand.first.value.to_s 
+  end
+
+  def total
+     @hand.each do |card|
+      @hand_total += card.value
+      end
+      @hand_total.to_s
+  end
+end
+
+class Player
+  attr_accessor :hand
+  attr_reader :name
+
+  @@number_of_players = 0
+
+  def initialize(p_name)
+    @@number_of_players += 1
+    @name = p_name
+    @hand = []
+    @hand_total = 0
+  end
+
+  def show_hand
+    puts "#{@name}'s hand => "
+    @hand.each do |card|
+      puts "=> #{card.face[1]} of #{card.face[0]}"
+      end
+      puts "=>Total: " + total
+  end
+
+  def total
+     @hand.each do |card|
+      @hand_total += card.value
+      end
+      @hand_total.to_s
+  end
+
+end
+
+
+
 game_deck = BlackJackDeck.new
+player_one = Player.new("Maverick")
+dealer = Dealer.new
+game_deck.deal_card(player_one)
+game_deck.deal_card(player_one)
+player_one.show_hand
+game_deck.deal_card(dealer)
+dealer.show_hand
+dealer.pre_flop_total
 if game_deck.respond_to?("display_card")
   p game_deck.display_card
 else
