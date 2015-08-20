@@ -44,6 +44,7 @@ end
 
 class BlackJackDeck
  attr_accessor :blackjack_deck
+ DECK_COUNT = 7
  FACE_CARDS = ['J','Q','K','A']
  SUITS = ['HEARTS','DIAMONDS','SPADES','CLUBS'] 
  FACE = ['2','3','4','5','6','7','8','9','10','J','Q','K','A']
@@ -58,8 +59,8 @@ class BlackJackDeck
 
   def initialize
     i = 0
-    @blackjack_deck = Deck.new(52,Card)
-    @cards = SUITS.product(FACE)
+    @blackjack_deck = Deck.new(364,Card)
+    @cards = SUITS.product(FACE) * DECK_COUNT
     @blackjack_deck.data.each do |card|
       card.value = (@cards[i][1]).to_i
       if card.value == 0
@@ -82,6 +83,14 @@ class BlackJackDeck
     @recipient = recipient
     @recipient.hand << @blackjack_deck.data.pop
    
+  end
+
+  def player_hit
+    deal_card(@current_player)
+  end
+
+  def dealer_hit
+    
   end
 
 end
@@ -120,11 +129,16 @@ class Player
 
   @@number_of_players = 0
 
+  def self.number_of_players
+    @@number_of_players
+  end
+
   def initialize(p_name)
     @@number_of_players += 1
     @name = p_name
     @hand = []
     @hand_total = 0
+    @bet = 0
   end
 
   def show_hand
@@ -142,26 +156,59 @@ class Player
       @hand_total.to_s
   end
 
+  def place_bet
+    puts "Place a bet?"
+    @bet = gets.chomp.to_i
+  end
+
+  def hit
+    
+  end
 end
 
 
+class Game
+MAX_PLAYERS = 7
 
-game_deck = BlackJackDeck.new
-player_one = Player.new("Maverick")
-dealer = Dealer.new
-game_deck.deal_card(player_one)
-game_deck.deal_card(player_one)
-player_one.show_hand
-game_deck.deal_card(dealer)
-dealer.show_hand
-dealer.pre_flop_total
-if game_deck.respond_to?("display_card")
-  p game_deck.display_card
-else
-  puts "game_deck does not respond to display_card"
+  def initialize
+  game_deck = BlackJackDeck.new
+  #p game_deck
+  game_deck.shuffle_deck
+  #p game_deck
+  end
+  def start
+    add_player("Max")
+  end
+  def add_player(p_name)
+    num_players = (Player::number_of_players) + 1
+    player_prepend = "player"
+    player_number = player_prepend +"_"+num_players.to_s
+    instance_variable_set("@#{player_number}", Player.new(p_name))
+  end
 end
-game_deck.shuffle_deck
-p game_deck
+
+game = Game.new
+game.start
+
+#p game_deck
+#player_one = Player.new("Maverick")
+#dealer = Dealer.new
+#game_deck.deal_card(player_one)
+#game_deck.deal_card(player_one)
+#player_one.show_hand
+#game_deck.deal_card(dealer)
+#dealer.show_hand
+#dealer.pre_flop_total
+#if game_deck.respond_to?("display_card")
+#  p game_deck.display_card
+#else
+#  puts "game_deck does not respond to display_card"
+#end
+#game_deck.shuffle_deck
+#p game_deck
+#
+
+
 #card = Card.new(5)
 #puts card.inspect
 #if card.respond_to?("state")
@@ -187,3 +234,4 @@ p game_deck
 #else
 #  puts "no such information available"
 #end
+
