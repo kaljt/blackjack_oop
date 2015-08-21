@@ -85,17 +85,47 @@ class BlackJackDeck
 
   end
 
-  def player_hit
-    deal_card(@current_player)
+end
+
+module Hand
+
+  def total
+    @ace_count = 0
+    @hand_total = 0
+     @hand.each do |card|
+      @hand_total += card.value
+      if card.face[1].include?("A")
+        @ace_count +=1
+        end
+     end                                       
+       @ace_count.times  do                      
+         if @hand_total > 21                                        
+            @hand_total -= 9
+         else
+            @hand_total +=1   
+         end
+       end
+     @hand_total.to_s
   end
 
-  def dealer_hit
-
+  def busted?
+    total.to_i > 21
   end
+
+  def place_bet
+    puts "#{name} Place a bet?"
+    @bet = gets.chomp.to_i
+  end
+
+  def blackjack
+    @hand_total == 21
+  end
+
 
 end
 
 class Dealer
+  include Hand
   attr_accessor :hand
   attr_reader :name
 
@@ -106,25 +136,37 @@ class Dealer
     puts "\n"
   end
 
+  def clear
+    @hand = []
+  end
+
   def show_hand
     puts "Dealer's hand =>"
     @hand.each do |card|
       puts "=> #{card.face[1]} of #{card.face[0]}"
     end
+    puts "Dealer Total: " + total
   end
   def pre_flop_total
+    puts "Dealer's hand =>"
+    puts "=> " + @hand.first.face[1] + " of " + @hand.first.face[0] 
     puts "Dealer Total: " + @hand.first.value.to_s
   end
 
-  def total
-     @hand.each do |card|
-      @hand_total += card.value
-      end
-      @hand_total.to_s
+  def has_blackjack
+    total.to_i == 21
   end
+
+  #def total
+  #   @hand.each do |card|
+  #    @hand_total += card.value
+  #    end
+  #    @hand_total.to_s
+  #end
 end
 
 class Player
+  include Hand
   attr_accessor :hand
   attr_reader :name, :hand_total
 
@@ -150,7 +192,9 @@ class Player
     puts "Please enter name for player_" + @@number_of_players.to_s
     @name = gets.chomp
   end
-
+  def clear
+    @hand = []
+  end
   def show_hand
     puts "#{@name}'s hand => "
     @hand.each do |card|
@@ -160,22 +204,35 @@ class Player
       puts "---------"
   end
 
-  def total
-    @hand_total = 0
-     @hand.each do |card|
-      @hand_total += card.value
-      end
-      @hand_total.to_s
-  end
-
-  def place_bet
-    puts "#{name} Place a bet?"
-    @bet = gets.chomp.to_i
-  end
-
-  def blackjack
-    @hand_total == 21
-  end
+  #def total
+  #  @ace_count = 0
+  #  @hand_total = 0
+  #   @hand.each do |card|
+  #    @hand_total += card.value
+  #    if card.face[1].include?("A")
+  #      @ace_count +=1
+  #      end
+  #   end                                       
+  #     @ace_count.times  do                      
+  #       if @hand_total > 21                                        
+  #          @hand_total -= 9
+  #       else
+  #          @hand_total +=1   
+  #       end
+  #     end
+  #   @hand_total.to_s
+  #end
+  #def busted?
+  #  total.to_i > 21
+  #end
+  #def place_bet
+  #  puts "#{name} Place a bet?"
+  #  @bet = gets.chomp.to_i
+  #end
+#
+  #def blackjack
+  #  @hand_total == 21
+  #end
 
 
 end
@@ -209,19 +266,35 @@ MAX_PLAYERS = 7
 
   end
   def play
+      continue = " "
+      while continue != 'n'
       player_bet
       player_deal
       dealer_deal
       player_deal
       display_player_hands
-      display_dealer_hand
       @dealer.pre_flop_total
       dealer_deal
+      dealer_blackjack?
       blackjack?
       hit_or_stay?
+      blackjack?
+      display_dealer_hand
+      dealer_hit
+      compare_hands
+
+      puts "Continue play?"
+      continue = gets.chomp.downcase
+      clear_hand
+    end
   end
 
-
+  def clear_hand
+    @dealer.clear 
+    Player::player_list.each do |player|
+      player.clear
+    end
+  end
   def player_bet
       Player::player_list.each do |player|
       player.place_bet
@@ -246,30 +319,45 @@ MAX_PLAYERS = 7
   def hit_or_stay?
     choices = ['H','S']
     Player::player_list.each do |player|
-        while player.hand_total < 21
+        while !player.busted?  && player.total.to_i != 21
         puts "#{player.name}, would you like to (h)it or (s)tay?"
         if !choices.include?(p_choice = gets.chomp.upcase)
           puts "Error, must (h)it or (s)tay."
           next
         end
         if p_choice == 'S'
-          puts "#{player.name} chose to stay."
+          puts "#{player.name} chose to stay with " + player.total
           break
         end
         puts "Dealing card to #{player.name}"
         game_deck.deal_card(player)
         player.show_hand
+
+      end
+      if player.busted?
+        puts "#{player.name} busted with " + player.total
       end
     end
   end
-
+  def dealer_hit
+    if @dealer.total.to_i == 17
+      puts "Dealer stands at #{dealer.total}"
+    else
+      while @dealer.total.to_i < 17
+        game_deck.deal_card(dealer)
+      end
+    end
+  end
   def display_dealer_hand
     @dealer.show_hand
+  end
+  def dealer_blackjack?
+    @dealer.has_blackjack
   end
   def blackjack?
     Player::player_list.each do |player|
       if player.blackjack
-        puts "You hit 21!"
+        puts "#{player.name} hit 21!"
       end
     end
   end
